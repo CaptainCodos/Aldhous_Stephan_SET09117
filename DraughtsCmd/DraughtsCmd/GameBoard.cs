@@ -10,15 +10,19 @@ namespace DraughtsCmd
     {
         public BoardCell[,] Cells { get; set; }
 
-        public GameBoard()
+        private GameManager m_manager;
+
+        public GameBoard(GameManager manager)
         {
+            m_manager = manager;
+
             Cells = new BoardCell[8, 8];
 
             for (int y = 0; y < 8; y++)
             {
                 for (int x = 0; x < 8; x++)
                 {
-                    Cells[x, y] = new BoardCell();
+                    Cells[x, y] = new BoardCell(this);
                 }
             }
         }

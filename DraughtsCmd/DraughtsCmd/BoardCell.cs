@@ -12,8 +12,12 @@ namespace DraughtsCmd
 
         public string[] Content { get; set; }
 
-        public BoardCell()
+        private GameBoard m_board;
+
+        public BoardCell(GameBoard board)
         {
+            m_board = board;
+
             Content = new string[3];
 
             for (int i = 0; i < 3; i++)

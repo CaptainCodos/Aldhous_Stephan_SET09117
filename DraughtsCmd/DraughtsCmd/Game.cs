@@ -10,6 +10,9 @@ namespace DraughtsCmd
     {
         private GameManager m_manager;
 
-
+        public Game()
+        {
+            m_manager = new GameManager(this);
+        }
     }
 }
