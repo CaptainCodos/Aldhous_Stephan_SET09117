@@ -1,0 +1,7 @@
+F:\Uni\Year 3\Algorithms And Data Structures\Coursework\DraughtsCmd\DraughtsCmd\bin\Debug\DraughtsCmd.exe.config
+F:\Uni\Year 3\Algorithms And Data Structures\Coursework\DraughtsCmd\DraughtsCmd\bin\Debug\DraughtsCmd.exe
+F:\Uni\Year 3\Algorithms And Data Structures\Coursework\DraughtsCmd\DraughtsCmd\bin\Debug\DraughtsCmd.pdb
+F:\Uni\Year 3\Algorithms And Data Structures\Coursework\DraughtsCmd\DraughtsCmd\obj\Debug\DraughtsCmd.csprojResolveAssemblyReference.cache
+F:\Uni\Year 3\Algorithms And Data Structures\Coursework\DraughtsCmd\DraughtsCmd\obj\Debug\DraughtsCmd.csproj.CoreCompileInputs.cache
+F:\Uni\Year 3\Algorithms And Data Structures\Coursework\DraughtsCmd\DraughtsCmd\obj\Debug\DraughtsCmd.exe
+F:\Uni\Year 3\Algorithms And Data Structures\Coursework\DraughtsCmd\DraughtsCmd\obj\Debug\DraughtsCmd.pdb
