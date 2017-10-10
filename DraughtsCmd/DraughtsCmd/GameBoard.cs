@@ -25,6 +25,65 @@ namespace DraughtsCmd
                     Cells[x, y] = new BoardCell(this);
                 }
             }
+
+            SetUpPlayer1();
+            SetUpPlayer2();
+        }
+
+        public void SetUpPlayer1()
+        {
+            int val = 0;
+
+            for (int y = 0; y < 8; y++)
+            {
+                val += 1;
+
+                if (y >= 8 - 3)
+                {
+                    for (int x = 0; x < 8; x++)
+                    {
+                        val += 1;
+
+                        if (val % 2 == 0)
+                        {
+                            Man man = new Man(x, y, m_manager.GetPlayer(0));
+
+                            Cells[x, y].FillCell(man);
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                }
+                
+            }
+        }
+
+        public void SetUpPlayer2()
+        {
+            int val = 0;
+
+            for (int y = 0; y < 3; y++)
+            {
+                val += 1;
+
+                for (int x = 0; x < 8; x++)
+                {
+                    val += 1;
+
+                    if (val % 2 == 0)
+                    {
+                        Man man = new Man(x, y, m_manager.GetPlayer(1));
+
+                        Cells[x, y].FillCell(man);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+            }
         }
 
         public void DrawBoard()
