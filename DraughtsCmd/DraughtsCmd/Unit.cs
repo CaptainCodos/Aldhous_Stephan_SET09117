@@ -17,6 +17,8 @@ namespace DraughtsCmd
         {
             Commander = commander;
 
+            Commander.ArmyUnits.Add(this);
+
             Xcoord = x;
             Ycoord = y;
         }
@@ -30,12 +32,15 @@ namespace DraughtsCmd
             return unit;
         }
 
-        public void ConvertToKing()
+        public void ConvertToKing(BoardCell cell)
         {
             Unit unit = this;
+
+            Commander.ArmyUnits.Remove(this);
+
             unit = new King(Xcoord, Ycoord, Commander);
 
-
+            cell.FillCell(unit);
         }
     }
 

@@ -29,6 +29,24 @@ namespace DraughtsCmd
             }
         }
 
+        public void FillCell(Unit unit)
+        {
+            Occupant = unit;
+
+            if (unit is Man)
+            {
+                Content[0] = "";
+                Content[1] = " " + unit.Commander.BoardSign;
+                Content[2] = "___";
+            }
+            else
+            {
+                Content[0] = "";
+                Content[1] = "(" + unit.Commander.BoardSign + ")";
+                Content[2] = "___";
+            }
+        }
+
         public void OccupyCell(BoardCell prevCell, Unit unit)
         {
             Occupant = unit;
@@ -63,6 +81,15 @@ namespace DraughtsCmd
             Occupant.Commander.ArmyUnits.Remove(Occupant);
 
             EmptyCell();
+        }
+
+        public void FillContent(string val)
+        {
+            Content[1] = " " + val;
+        }
+        public void EmptyContent()
+        {
+            FillCell(Occupant);
         }
     }
 }

@@ -14,5 +14,10 @@ namespace DraughtsCmd
         {
             m_manager = new GameManager(this);
         }
+
+        public GameManager GetManager()
+        {
+            return m_manager;
+        }
     }
 }
