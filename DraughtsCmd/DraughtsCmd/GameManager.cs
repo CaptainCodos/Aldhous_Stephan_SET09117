@@ -45,5 +45,20 @@ namespace DraughtsCmd
             Turn += 1;
             CurrPlayer = Players[Turn % 2];
         }
+
+        public void GetUnits()
+        {
+
+        }
+
+        public void GetAttacks()
+        {
+
+        }
+
+        public void GetMoves()
+        {
+
+        }
     }
 }

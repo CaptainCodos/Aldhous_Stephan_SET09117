@@ -14,16 +14,16 @@ namespace DraughtsCmd
 
         public virtual void Confirm(out int val)
         {
-            Console.WriteLine("\nAre you sure? Y/N");
+            Console.WriteLine("\nAre you sure? y/n");
 
             val = 0;
 
             switch (Input.GetLine())
             {
-                case "Y":
+                case "y":
                     val = 1;
                     break;
-                case "N":
+                case "n":
                     val = 0;
                     break;
                 default:
@@ -44,16 +44,16 @@ namespace DraughtsCmd
         {
             Console.Clear();
             Console.WriteLine("Crazy Draughts");
-            Console.WriteLine("Start New Game: NG");
-            Console.WriteLine("Load Game: LG");
-            Console.WriteLine("Exit: E");
+            Console.WriteLine("Start New Game: ng");
+            Console.WriteLine("Load Game: lg");
+            Console.WriteLine("Exit: e");
             Console.WriteLine("\nPlease choose action: ");
 
             int confirmVal = 0;
             
             switch(Input.GetLine())
             {
-                case "NG":
+                case "ng":
                     Confirm(out confirmVal);
 
                     if (confirmVal == 1)
@@ -69,7 +69,7 @@ namespace DraughtsCmd
                         UpdateState();
                     }
                     break;
-                case "LG":
+                case "lg":
                     Confirm(out confirmVal);
 
                     if (confirmVal == 1)
@@ -100,7 +100,7 @@ namespace DraughtsCmd
                         UpdateState();
                     }
                     break;
-                case "E":
+                case "e":
                     Confirm(out confirmVal);
 
                     if (confirmVal == 1)
@@ -138,16 +138,18 @@ namespace DraughtsCmd
         {
             ConstantDisplay();
 
-            Console.WriteLine("\nPlay Turn: P");
-            Console.WriteLine("Exit Game: E");
+            Console.WriteLine("\nPlay turn: p");
+            Console.WriteLine("\nUndo: u");
+            Console.WriteLine("\nRedo: r");
+            Console.WriteLine("Exit Game: e");
 
             int confirmVal;
 
             switch (Input.GetLine())
             {
-                case "P":
+                case "p":
                     break;
-                case "E":
+                case "e":
                     Confirm(out confirmVal);
 
                     if (confirmVal == 1)
@@ -184,6 +186,21 @@ namespace DraughtsCmd
             Console.WriteLine("Player2 Kills: " + m_game.GetManager().GetPlayer(1).Kills);
         }
 
+        public void SelectPiece()
+        {
+            ConstantDisplay();
 
+            Console.WriteLine("\nPlay turn: p");
+            Console.WriteLine("\nUndo: u");
+            Console.WriteLine("\nRedo: r");
+            Console.WriteLine("Exit Game: e");
+
+            int confirmVal;
+
+            switch (Input.GetLine())
+            {
+
+            }
+        }
     }
 }
