@@ -14,9 +14,17 @@ namespace DraughtsCmd
 
         private GameBoard m_board;
 
-        public BoardCell(GameBoard board)
+        public int XCoord { get; set; }
+        public int YCoord { get; set; }
+
+        public bool KingsLane { get; set; }
+        public Player LaneOwner { get; set; }
+
+        public BoardCell(GameBoard board, int xPos, int yPos)
         {
             m_board = board;
+            XCoord = xPos;
+            YCoord = yPos;
 
             Content = new string[3];
 
@@ -76,10 +84,10 @@ namespace DraughtsCmd
             Content[2] = "___";
         }
 
-        public void KillUnit()
+        public void KillUnit(Unit attacker)
         {
             Occupant.Commander.ArmyUnits.Remove(Occupant);
-
+            attacker.Commander.Kills++;
             EmptyCell();
         }
 
