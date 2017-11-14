@@ -9,6 +9,7 @@ namespace DraughtsCmd
     class Program
     {
         public static List<Game> games;
+        public static Game lastGame;
 
         static void Main(string[] args)
         {

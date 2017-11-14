@@ -13,6 +13,8 @@ namespace DraughtsCmd
         public int Xcoord { get; set; }
         public int Ycoord { get; set; }
 
+        public int MoveDir { get; set; }
+
         public Unit(int x, int y, Player commander)
         {
             Commander = commander;
@@ -39,8 +41,15 @@ namespace DraughtsCmd
             Commander.ArmyUnits.Remove(this);
 
             unit = new King(Xcoord, Ycoord, Commander);
+            unit.MoveDir = MoveDir;
 
             cell.FillCell(unit);
+        }
+
+        public void UpdateXY(int x, int y)
+        {
+            Xcoord = x;
+            Ycoord = y;
         }
     }
 
