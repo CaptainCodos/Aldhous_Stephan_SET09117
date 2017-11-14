@@ -8,20 +8,20 @@ namespace DraughtsCmd
 {
     class GameManager
     {
-        public Player[] Players { get; set; }
+        public Player[] Players { get; set; } // Players in the game (2)
 
-        public GameBoard Board { get; set; }
+        public GameBoard Board { get; set; } // Gameboard played on
 
-        public int Turn { get; set; }
-        public Player CurrPlayer { get; set; }
+        public int Turn { get; set; } // Current turn
+        public Player CurrPlayer { get; set; } // Current player
 
-        public List<Move> Attacks { get; set; }
-        public List<Move> Moves { get; set; }
-        public List<BoardCell> CellsAble { get; set; }
+        public List<Move> Attacks { get; set; } // Attacks possible
+        public List<Move> Moves { get; set; } // Moves possible
+        public List<BoardCell> CellsAble { get; set; } // Cells able to move
 
-        private Game m_game;
+        private Game m_game; // game this manages
 
-        private GameHistory m_history;
+        private GameHistory m_history; // history to use
 
         public GameManager(Game game, bool hasAI)
         {
@@ -48,11 +48,13 @@ namespace DraughtsCmd
             CurrPlayer = Players[Turn % 2];
         }
 
+        // get player given index
         public Player GetPlayer(int player)
         {
             return Players[player];
         }
 
+        // Executes given move and then checks if its possible to make another move
         public void ConductTurn(Move move)
         {
             move.ExecuteMove(1);
@@ -64,6 +66,7 @@ namespace DraughtsCmd
             Moves = new List<Move>();
             CellsAble = new List<BoardCell>();
 
+            // if move is attack, check for further moves
             if (move is Attack)
             {
                 AddPossibleAttacks(new Coord(curr.XCoord, curr.YCoord));
@@ -74,12 +77,14 @@ namespace DraughtsCmd
                 }
             }
 
+            // if no cells available or move was normal and is AI player then finish
             if (CurrPlayer.IsAIPlayer && CellsAble.Count <= 0)
             {
                 FinishTurn();
             }
         }
 
+        // gets rid of available moves and cells
         public void CancelTurn()
         {
             Attacks = new List<Move>();
@@ -87,32 +92,41 @@ namespace DraughtsCmd
             CellsAble = new List<BoardCell>();
         }
 
+        // Completes turn
         public void FinishTurn()
         {
             Attacks = new List<Move>();
             Moves = new List<Move>();
             CellsAble = new List<BoardCell>();
 
+            // increment turn
             Turn += 1;
             CurrPlayer = Players[Turn % 2];
 
+            // if player next turn is AI then execute AI move (requires no input and thus no game state changes)
             if (CurrPlayer.IsAIPlayer)
             {
+                // add board to history before it begins
                 AddCurrentMoment();
 
+                // get cells that can move
                 GetUnits();
 
+                // conduct AI turn
                 AITurn();
             }
         }
 
+        // performs turn for AI
         public void AITurn()
         {
+            // if there are any units that can move then check random available unit for possible moves
             if (CellsAble.Count > 0)
             {
                 int piece = Program.RNG.Next(0, CellsAble.Count);
                 List<Move> moves = GetMovesOfCell(CellsAble[piece]);
 
+                // (sanity check first) pick random move and conduct the turn
                 if (moves.Count > 0)
                 {
                     int moveSelected = Program.RNG.Next(0, moves.Count);
@@ -130,7 +144,8 @@ namespace DraughtsCmd
                 FinishTurn();
             }
         }
-
+        
+        // Find all the cells with units that can move (attacks and normal moves are mutually exclusive)
         public void GetUnits()
         {
             for (int i = 0; i < CurrPlayer.ArmyUnits.Count; i++)
@@ -147,6 +162,8 @@ namespace DraughtsCmd
             }
         }
 
+        // gets all available moves for cell in which this cell is the starting cell
+        // checks for attacks first. If there are none checks for normal moves (attacks and normal moves are mutually exclusive)
         public List<Move> GetMovesOfCell(BoardCell cell)
         {
             List<Move> cellMoves = new List<Move>();
@@ -173,6 +190,7 @@ namespace DraughtsCmd
             return cellMoves;
         }
 
+        // adds possible attacks for board coordinate
         public void AddPossibleAttacks(Coord coords)
         {
             if (Board.Cells[coords.X, coords.Y].Occupant is Man)
@@ -185,6 +203,7 @@ namespace DraughtsCmd
             }
         }
 
+        // adds possible attacks for man unit
         public void AddAttacksMan(Unit man)
         {
             int yDir = man.MoveDir;
@@ -192,6 +211,8 @@ namespace DraughtsCmd
 
             BoardCell curr = Board.Cells[manXY.X, manXY.Y];
 
+            // check if cell in -> dir is on board and contains unit
+            // check if cell in -> 2*dir is on board and doesn't contain unit
             Coord dir = new Coord(1, yDir);
             if (IsCoordsOnBoard(manXY + dir))
             {
@@ -206,6 +227,7 @@ namespace DraughtsCmd
                         BoardCell finish = Board.Cells[final.X, final.Y];
                         Attacks.Add(new Attack(curr, finish, defender, CurrPlayer, defender.Occupant.Commander));
 
+                        // Ensure cells that can move has no duplicates
                         if (!CellsAble.Contains(curr))
                         {
                             CellsAble.Add(curr);
@@ -228,6 +250,7 @@ namespace DraughtsCmd
                         BoardCell finish = Board.Cells[final.X, final.Y];
                         Attacks.Add(new Attack(curr, finish, defender, CurrPlayer, defender.Occupant.Commander));
 
+                        // Ensure cells that can move has no duplicates
                         if (!CellsAble.Contains(curr))
                         {
                             CellsAble.Add(curr);
@@ -237,6 +260,7 @@ namespace DraughtsCmd
             }
         }
 
+        // adds possible attacks for king unit
         public void AddAttacksKing(Unit king)
         {
             int yDir = king.MoveDir;
@@ -254,6 +278,7 @@ namespace DraughtsCmd
             dirs[2] = new Coord(1, -yDir);
             dirs[3] = new Coord(-1, -yDir);
 
+            // for every dir, check if -> dir has enemy and is on board and check if -> 2*dir is empty and is on board
             for (int i = 0; i < dirs.Length; i++)
             {
                 Coord cXY = currCoords + dirs[i];
@@ -273,6 +298,7 @@ namespace DraughtsCmd
 
                                 Attacks.Add(new Attack(curr, finish, defender, CurrPlayer, defender.Occupant.Commander));
 
+                                // Ensure cells that can move has no duplicates
                                 if (!CellsAble.Contains(curr))
                                 {
                                     CellsAble.Add(curr);
@@ -284,6 +310,7 @@ namespace DraughtsCmd
             }
         }
 
+        // adds possible moves for board coordinate
         public void AddPossibleMoves(Coord coords)
         {
             if (Board.Cells[coords.X, coords.Y].Occupant is Man)
@@ -296,6 +323,7 @@ namespace DraughtsCmd
             }
         }
 
+        // adds possible moves for current man unit
         public void AddMovesMan(Unit man)
         {
             int yDir = man.MoveDir;
@@ -303,6 +331,7 @@ namespace DraughtsCmd
 
             BoardCell curr = Board.Cells[manXY.X, manXY.Y];
 
+            // check if cell in -> dir is empty and on board
             if (IsCoordsOnBoard(manXY + new Coord(1, yDir)))
             {
                 Coord next = manXY + new Coord(1, yDir);
@@ -313,6 +342,7 @@ namespace DraughtsCmd
                     Player opponent = GetPlayer(opponentIdx);
                     Moves.Add(new Move(curr, finish, CurrPlayer, opponent));
 
+                    // Ensure cells that can move has no duplicates
                     if (!CellsAble.Contains(curr))
                     {
                         CellsAble.Add(curr);
@@ -338,6 +368,7 @@ namespace DraughtsCmd
             }
         }
 
+        // adds possible moves for king unit
         public void AddMovesKing(Unit king)
         {
             int yDir = king.MoveDir;
@@ -354,6 +385,7 @@ namespace DraughtsCmd
             dirs[2] = new Coord(1, -yDir);
             dirs[3] = new Coord(-1, -yDir);
 
+            // for every dir check if cell in -> dir is empty and on board
             for (int i = 0; i < dirs.Length; i++)
             {
                 Coord cXY = currCoords + dirs[i];
@@ -368,6 +400,7 @@ namespace DraughtsCmd
                         Player opponent = GetPlayer(opponentIdx);
                         Moves.Add(new Move(curr, finish, CurrPlayer, opponent));
 
+                        // Ensure cells that can move has no duplicates
                         if (!CellsAble.Contains(curr))
                         {
                             CellsAble.Add(curr);
@@ -377,11 +410,13 @@ namespace DraughtsCmd
             }
         }
 
+        // Checks if the coordinate is on the game board
         public bool IsCoordsOnBoard(Coord coords)
         {
             return (0 <= coords.X && coords.X < Board.Cells.GetLength(0)) && (0 <= coords.Y && coords.Y < Board.Cells.GetLength(1));
         }
 
+        // adds units currently on the board to history
         public void AddCurrentMoment()
         {
             HistoryItem item = new HistoryItem();
@@ -415,6 +450,7 @@ namespace DraughtsCmd
             m_history.AddItem(item);
         }
 
+        // clears the board and armies and replaces the pieces with ones stored in undo history item
         public void Undo()
         {
             Player p1 = Players[0];
@@ -491,6 +527,7 @@ namespace DraughtsCmd
             CurrPlayer = Players[Turn % 2];
         }
 
+        // clears the board and armies and replaces the pieces with ones stored in redo history item
         public void Redo()
         {
             Player p1 = Players[0];

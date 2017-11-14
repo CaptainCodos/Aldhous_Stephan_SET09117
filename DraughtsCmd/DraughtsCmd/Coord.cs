@@ -6,10 +6,13 @@ using System.Threading.Tasks;
 
 namespace DraughtsCmd
 {
+    /// <summary>
+    /// Coordinate struct for use in checking board cells
+    /// </summary>
     struct Coord
     {
-        public int X { get; set; }
-        public int Y { get; set; }
+        public int X { get; set; } // X Component of the coordinate
+        public int Y { get; set; } // Y Component of the coordinate
 
         public Coord(int x, int y)
         {

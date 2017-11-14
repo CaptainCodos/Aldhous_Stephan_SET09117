@@ -6,6 +6,18 @@ using System.Threading.Tasks;
 
 namespace DraughtsCmd
 {
+    /// <summary>
+    /// Base state to be used the the app's state machine
+    /// 
+    ///     MainMenu -----> StartPlay -----> SelectPiece -----> SelectMove
+    ///                         ^                 |                  |
+    ///                         |              cancel              cancel
+    ///                         |                 v                  v
+    ///                         --------------------------------------
+    /// 
+    /// Any input entered in any state that is not specified in it's respective switch
+    /// statement, will result in regressing back to the start of that state.
+    /// </summary>
     class AppState
     {
         public virtual void UpdateState()
@@ -17,6 +29,7 @@ namespace DraughtsCmd
 
         }
 
+        // Used to comfirm a selection
         public virtual void Confirm(out int val)
         {
             Console.WriteLine("\nAre you sure? y/n");
@@ -32,20 +45,26 @@ namespace DraughtsCmd
                     val = 0;
                     break;
                 default:
+                    // re-ask the question if input is not y or n
                     Confirm(out val);
                     break;
             }
         }
     }
 
+    /// <summary>
+    /// App main menu
+    /// </summary>
     class MainMenu : AppState
     {
+        // text to display the winner of the last played game
         private string m_winnerTxt;
 
         public MainMenu()
         {
             m_winnerTxt = "";
 
+            // set winner announcement if the last game has ended
             if (Program.lastGame != null)
             {
                 if (Program.lastGame.GameEnded)
@@ -69,6 +88,7 @@ namespace DraughtsCmd
 
             int confirmVal = 0;
             
+            // choose option specified above (e.g. Start New Game = ng)
             switch(Input.GetLine())
             {
                 case "ng":
@@ -80,12 +100,14 @@ namespace DraughtsCmd
 
                         Game game;
                         AppState state = this;
+
+                        // decide if game willbe versus an AI
                         switch (Input.GetLine())
                         {
                             case "y":
                                 game = new Game(true);
                                 Program.lastGame = game;
-                                
+
                                 state = new StartPlay(game, 1);
                                 state.UpdateState();
                                 break;
@@ -103,6 +125,7 @@ namespace DraughtsCmd
                     }
                     else
                     {
+                        // regress back to start of state
                         UpdateState();
                     }
                     break;
@@ -119,7 +142,7 @@ namespace DraughtsCmd
                         int.TryParse(input, out val);
                         val -= 1;
 
-                        if (val < Program.games.Count && Program.games.Count > 0)
+                        if (val < Program.games.Count && val >= 0 && Program.games.Count > 0)
                         {
                             AppState state = this;
                             state = new StartPlay(val);
@@ -134,41 +157,47 @@ namespace DraughtsCmd
                     }
                     else
                     {
+                        // regress back to start of state
                         UpdateState();
                     }
                     break;
                 case "e":
                     Confirm(out confirmVal);
 
+                    // confirm if you want to exit the game
                     if (confirmVal == 1)
                     {
                         Environment.Exit(0);
                     }
                     else
                     {
+                        // regress back to start of state
                         UpdateState();
                     }
                     break;
                 default:
+                    // invalid input results in regression back to start of state
                     UpdateState();
                     break;
             }
         }
     }
 
+    /// <summary>
+    /// Beginning of a turn, player can choose to play the turn, undo, redo or exit
+    /// </summary>
     class StartPlay : AppState
     {
         private Game m_game;
-        private BoardCell m_playCell;
-        private List<Move> m_cellMoves;
-        private Move m_selectedMove;
 
+        // load game from session
         public StartPlay(int game)
         {
             m_game = Program.games[game];
             Program.lastGame = m_game;
         }
 
+        // start new game or resume current game
         public StartPlay(Game game, int newGameVal)
         {
             if (newGameVal == 0)
@@ -279,6 +308,7 @@ namespace DraughtsCmd
 
                     if (confirmVal == 1)
                     {
+                        // cancels the turn being taken (allows you to select different piece if possible)
                         m_game.GetManager().CancelTurn();
                         state = new StartPlay(m_game, 0);
                         state.UpdateState();
@@ -291,10 +321,12 @@ namespace DraughtsCmd
                 default:
                     if (input.Length >= 3)
                     {
+                        // parses the x component of the cell you entered
                         int x;
                         string testX = "" + input[0];
                         if (!int.TryParse(testX, out x))
                         {
+                            // regress if value cannot parse
                             UpdateState();
                         }
 
@@ -304,6 +336,7 @@ namespace DraughtsCmd
                         {
                             List<Move> moves = m_game.GetManager().GetMovesOfCell(m_game.GetManager().Board.Cells[x, y]);
 
+                            // ensure that you can only go to SelectMove state if a move is available otherwise finish turn
                             if (moves.Count >= 0)
                             {
                                 state = new SelectMove(m_game, moves);
@@ -319,6 +352,7 @@ namespace DraughtsCmd
                         }
                         else
                         {
+                            // if input is invalid then regress
                             m_game.GetManager().CancelTurn();
                             UpdateState();
                         }
@@ -372,7 +406,6 @@ namespace DraughtsCmd
     class SelectMove : AppState
     {
         private Game m_game;
-        private BoardCell m_playCell;
         private List<Move> m_moves;
         private string m_errorTxt;
 
@@ -398,6 +431,7 @@ namespace DraughtsCmd
                 case "c":
                     Confirm(out confirmVal);
 
+                    // choose to cancel the current turn
                     if (confirmVal == 1)
                     {
                         m_game.GetManager().CancelTurn();
@@ -412,15 +446,19 @@ namespace DraughtsCmd
                 default:
                     int select;
                     string testS = input;
+
+                    // check if input can be parsed and if the input is within the range of moves
                     if (int.TryParse(input, out select))
                     {
                         if (0 <= select && select < m_moves.Count)
                         {
-                            //m_moves[select].ExecuteMove(1);
+                            // conducts the move selected (this method also checks for possible attack if the move was an attack
                             m_game.GetManager().ConductTurn(m_moves[select]);
 
                             List<Move> moves;
 
+                            // if there is an attack available then the unit that just attacked will be available
+                            // meaning they now have the option to make another move(attack)
                             if (m_game.GetManager().CellsAble.Count > 0)
                             {
                                 moves = m_game.GetManager().GetMovesOfCell(m_game.GetManager().CellsAble[0]);
@@ -476,98 +514,6 @@ namespace DraughtsCmd
             Console.WriteLine("\n" + m_errorTxt);
 
             Console.WriteLine("\nSelectMove!");
-            Console.WriteLine("\nCancel Move: c");
-        }
-    }
-
-    class SelectDist : AppState
-    {
-        private Game m_game;
-        private BoardCell m_playCell;
-        private Move m_move;
-        private string m_errorTxt;
-
-        public SelectDist(Game game, Move move)
-        {
-            m_game = game;
-            m_move = move;
-            m_errorTxt = "";
-        }
-
-        public override void UpdateState()
-        {
-            ConstantDisplay();
-
-            int confirmVal;
-
-            AppState state = this;
-
-            string input = Input.GetLine();
-
-            switch (input)
-            {
-                case "c":
-                    Confirm(out confirmVal);
-
-                    if (confirmVal == 1)
-                    {
-                        state = new StartPlay(m_game, 0);
-                        state.UpdateState();
-                    }
-                    else
-                    {
-                        UpdateState();
-                    }
-                    break;
-                default:
-                    int select;
-                    string testS = input;
-                    if (int.TryParse(input, out select))
-                    {
-                        KingMove kMove = (KingMove)m_move;
-                        if (1 <= select && select < kMove.Moves.Count)
-                        {
-                            //m_game.GetManager().ConductTurn()
-
-                            m_game.GetManager().FinishTurn();
-
-                            state = new StartPlay(m_game, 0);
-                            state.UpdateState();
-                        }
-                        else
-                        {
-                            m_errorTxt = "Invalid Selection!";
-                            UpdateState();
-                        }
-                    }
-                    else
-                    {
-                        m_errorTxt = "Is not a number!";
-                        UpdateState();
-                    }
-                    break;
-            }
-        }
-
-        public override void ConstantDisplay()
-        {
-            Console.Clear();
-            Console.WriteLine("Game On!");
-            Console.WriteLine("\nTurn " + (m_game.GetManager().Turn + 1));
-            Console.WriteLine("Player: " + ((m_game.GetManager().Turn % 2) + 1));
-            Console.WriteLine("");
-
-            m_game.GetManager().Board.DrawBoard(m_move);
-
-            Console.WriteLine("\nPlayer1 Units Remaining: " + m_game.GetManager().GetPlayer(0).Units);
-            Console.WriteLine("Player1 Kills: " + m_game.GetManager().GetPlayer(0).Kills);
-
-            Console.WriteLine("\nPlayer2 Units Remaining: " + m_game.GetManager().GetPlayer(1).Units);
-            Console.WriteLine("Player2 Kills: " + m_game.GetManager().GetPlayer(1).Kills);
-
-            Console.WriteLine("\n" + m_errorTxt);
-
-            Console.WriteLine("\nSelectMove: ");
             Console.WriteLine("\nCancel Move: c");
         }
     }

@@ -8,17 +8,14 @@ namespace DraughtsCmd
 {
     class Game
     {
-        private GameManager m_manager;
+        private GameManager m_manager; // manager for this game
 
-        public int TurnsSkipped { get; set; }
-
-        public bool GameEnded { get; set; }
-        public int Winner { get; set; }
+        public bool GameEnded { get; set; } // game ending flag
+        public int Winner { get; set; } // value for announcement to figure out who won the game
 
         public Game(bool hasAI)
         {
             m_manager = new GameManager(this, hasAI);
-            TurnsSkipped = 0;
         }
 
         public GameManager GetManager()
@@ -26,9 +23,10 @@ namespace DraughtsCmd
             return m_manager;
         }
 
+        // Checks if game is complete
         public void CheckIfComplete()
         {
-            if (TurnsSkipped > 1 || m_manager.GetPlayer(0).Units <= 0 || m_manager.GetPlayer(1).Units <= 0)
+            if (m_manager.GetPlayer(0).Units <= 0 || m_manager.GetPlayer(1).Units <= 0)
             {
                 GameEnded = true;
 
@@ -40,6 +38,10 @@ namespace DraughtsCmd
                 {
                     Winner = 0;
                 }
+            }
+            else
+            {
+                GameEnded = false;
             }
         }
     }
