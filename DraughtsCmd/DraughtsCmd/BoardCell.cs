@@ -6,17 +6,25 @@ using System.Threading.Tasks;
 
 namespace DraughtsCmd
 {
+    /// <summary>
+    /// Contains data about the cell on the board
+    /// </summary>
     class BoardCell
     {
+        // Who current resides in the cell
         public Unit Occupant { get; set; }
 
+        // Content to draw to screen
         public string[] Content { get; set; }
 
+        // Gameboard the cell belongs to
         private GameBoard m_board;
 
+        // Cell Coordinates
         public int XCoord { get; set; }
         public int YCoord { get; set; }
 
+        // Check if cell is in a king lane
         public bool KingsLane { get; set; }
         public Player LaneOwner { get; set; }
 
@@ -37,6 +45,10 @@ namespace DraughtsCmd
             }
         }
 
+        /// <summary>
+        /// Fills the content of the cell depending on the unit filling it
+        /// </summary>
+        /// <param name="unit"></param>
         public void FillCell(Unit unit)
         {
             Occupant = unit;
@@ -55,6 +67,7 @@ namespace DraughtsCmd
             }
         }
 
+        // Similar to FillCell but empties the cell the unit moved from
         public void OccupyCell(BoardCell prevCell, Unit unit)
         {
             Occupant = unit;
@@ -75,6 +88,7 @@ namespace DraughtsCmd
             prevCell.EmptyCell();
         }
 
+        // reset cell contents
         public void EmptyCell()
         {
             Occupant = null;
@@ -84,6 +98,7 @@ namespace DraughtsCmd
             Content[2] = "___";
         }
 
+        // kill the unit in the cell and remove them from the player's army
         public void KillUnit(Unit attacker)
         {
             Occupant.Commander.ArmyUnits.Remove(Occupant);

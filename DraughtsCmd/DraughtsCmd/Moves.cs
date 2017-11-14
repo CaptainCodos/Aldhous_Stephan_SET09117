@@ -8,11 +8,11 @@ namespace DraughtsCmd
 {
     class Move
     {
-        protected BoardCell m_startCell;
-        protected BoardCell m_endCell;
+        protected BoardCell m_startCell; // cell moved from
+        protected BoardCell m_endCell; // cell moved to
 
-        protected Player m_current;
-        protected Player m_opponent;
+        protected Player m_current; // current player
+        protected Player m_opponent; // opposing player
 
         public BoardCell GetEndCell { get { return m_endCell; } }
         public BoardCell GetStartCell { get { return m_startCell; } }
@@ -26,6 +26,7 @@ namespace DraughtsCmd
             m_opponent = opponent;
         }
 
+        // move the unit from start to end and convert unit to a king if they land in a king lane
         public virtual void ExecuteMove(int dist)
         {
             m_endCell.OccupyCell(m_startCell, m_startCell.Occupant);
@@ -40,7 +41,7 @@ namespace DraughtsCmd
 
     class Attack : Move
     {
-        protected BoardCell m_defenderCell;
+        protected BoardCell m_defenderCell; // cell being attacked
 
         public BoardCell GetDefenderCell { get { return m_defenderCell; } }
 
@@ -50,43 +51,11 @@ namespace DraughtsCmd
             m_defenderCell = defender;
         }
 
+        // kill the unit in the cell defending and move the unit
         public override void ExecuteMove(int dist)
         {
             m_defenderCell.KillUnit(m_startCell.Occupant);
             base.ExecuteMove(1);
         }
-    }
-
-    class KingMove : Move
-    {
-        public List<Move> Moves { get; set; }
-
-        public KingMove(BoardCell start, BoardCell end, Player current, Player opponent, List<Move> moves)
-            : base(start, end, current, opponent)
-        {
-            Moves = moves;
-        }
-
-        public override void ExecuteMove(int dist)
-        {
-            Moves[dist - 1].ExecuteMove(1);
-        }
-    }
-
-    class KingAttack : Attack
-    {
-        public List<Move> Moves { get; set; }
-
-        public KingAttack(BoardCell start, BoardCell end, BoardCell defender, Player current, Player opponent)
-            : base(start, end, defender, current, opponent)
-        {
-            m_defenderCell = defender;
-        }
-
-        //public override void ExecuteMove(int dist)
-        //{
-        //    base.ExecuteMove(1);
-        //    m_defenderCell.KillUnit();
-        //}
     }
 }

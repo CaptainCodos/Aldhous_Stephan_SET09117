@@ -8,9 +8,9 @@ namespace DraughtsCmd
 {
     class GameHistory
     {
-        public Stack<HistoryItem> Future { get; set; }
-        public Stack<HistoryItem> Past { get; set; }
-        public HistoryItem CurrItem { get; set; }
+        public Stack<HistoryItem> Future { get; set; } // Redo stack
+        public Stack<HistoryItem> Past { get; set; } // Undo stack
+        public HistoryItem CurrItem { get; set; } // Current history item
 
         public GameHistory()
         {
@@ -20,6 +20,7 @@ namespace DraughtsCmd
 
         public void Undo()
         {
+            // check if can revert
             if (Past.Count > 2)
             {
                 Future.Push(Past.Pop());
@@ -31,6 +32,7 @@ namespace DraughtsCmd
 
         public void Redo()
         {
+            // check if can redo
             if (Future.Count > 1)
             {
                 Past.Push(Future.Pop());

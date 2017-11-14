@@ -8,10 +8,13 @@ namespace DraughtsCmd
 {
     class Unit
     {
+        // Player in charge of this unit
         public Player Commander { get; set; }
 
+        // Unit's location on the game board
         public Coord UnitCoords { get; set; }
 
+        // Direction the unit moves (matters little as king)
         public int MoveDir { get; set; }
 
         public Unit(int x, int y, Player commander)
@@ -22,7 +25,7 @@ namespace DraughtsCmd
 
             UnitCoords = new Coord(x, y);
         }
-
+        
         public Unit CopyData()
         {
             Unit unit;
@@ -32,6 +35,7 @@ namespace DraughtsCmd
             return unit;
         }
 
+        // Turn the unit into a king by removing it from player's army and replacing it with a king in the player's army
         public void ConvertToKing(BoardCell cell)
         {
             Unit unit = this;
@@ -44,6 +48,7 @@ namespace DraughtsCmd
             cell.FillCell(unit);
         }
 
+        // Updates the unit's coordinates
         public void UpdateXY(int x, int y)
         {
             UnitCoords = new Coord(x, y);
