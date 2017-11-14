@@ -10,8 +10,7 @@ namespace DraughtsCmd
     {
         public Player Commander { get; set; }
 
-        public int Xcoord { get; set; }
-        public int Ycoord { get; set; }
+        public Coord UnitCoords { get; set; }
 
         public int MoveDir { get; set; }
 
@@ -21,15 +20,14 @@ namespace DraughtsCmd
 
             Commander.ArmyUnits.Add(this);
 
-            Xcoord = x;
-            Ycoord = y;
+            UnitCoords = new Coord(x, y);
         }
 
         public Unit CopyData()
         {
             Unit unit;
 
-            unit = new Unit(Xcoord, Ycoord, Commander);
+            unit = new Unit(UnitCoords.X, UnitCoords.Y, Commander);
 
             return unit;
         }
@@ -40,7 +38,7 @@ namespace DraughtsCmd
 
             Commander.ArmyUnits.Remove(this);
 
-            unit = new King(Xcoord, Ycoord, Commander);
+            unit = new King(UnitCoords.X, UnitCoords.Y, Commander);
             unit.MoveDir = MoveDir;
 
             cell.FillCell(unit);
@@ -48,8 +46,7 @@ namespace DraughtsCmd
 
         public void UpdateXY(int x, int y)
         {
-            Xcoord = x;
-            Ycoord = y;
+            UnitCoords = new Coord(x, y);
         }
     }
 

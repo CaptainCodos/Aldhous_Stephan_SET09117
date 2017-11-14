@@ -31,7 +31,7 @@ namespace DraughtsCmd
 
         public void Redo()
         {
-            if (Future.Count > 2)
+            if (Future.Count > 1)
             {
                 Past.Push(Future.Pop());
                 Past.Push(Future.Pop());

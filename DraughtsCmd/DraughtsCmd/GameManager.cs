@@ -21,7 +21,9 @@ namespace DraughtsCmd
 
         private Game m_game;
 
-        public GameManager(Game game)
+        private GameHistory m_history;
+
+        public GameManager(Game game, bool hasAI)
         {
             Attacks = new List<Move>();
             Moves = new List<Move>();
@@ -29,10 +31,15 @@ namespace DraughtsCmd
 
             m_game = game;
 
+            m_history = new GameHistory();
+
             Players = new Player[2];
 
-            Players[0] = new Player("O");
-            Players[1] = new Player("X");
+            Players[0] = new Player("O", false);
+            Players[1] = new Player("X", false);
+
+            if (hasAI)
+                Players[1].IsAIPlayer = true;
 
             Board = new GameBoard(this);
 
@@ -59,7 +66,17 @@ namespace DraughtsCmd
 
             if (move is Attack)
             {
-                AddPossibleAttacks(curr.XCoord, curr.YCoord);
+                AddPossibleAttacks(new Coord(curr.XCoord, curr.YCoord));
+
+                if (CurrPlayer.IsAIPlayer)
+                {
+                    AITurn();
+                }
+            }
+
+            if (CurrPlayer.IsAIPlayer && CellsAble.Count <= 0)
+            {
+                FinishTurn();
             }
         }
 
@@ -78,20 +95,54 @@ namespace DraughtsCmd
 
             Turn += 1;
             CurrPlayer = Players[Turn % 2];
+
+            if (CurrPlayer.IsAIPlayer)
+            {
+                AddCurrentMoment();
+
+                GetUnits();
+
+                AITurn();
+            }
+        }
+
+        public void AITurn()
+        {
+            if (CellsAble.Count > 0)
+            {
+                int piece = Program.RNG.Next(0, CellsAble.Count);
+                List<Move> moves = GetMovesOfCell(CellsAble[piece]);
+
+                if (moves.Count > 0)
+                {
+                    int moveSelected = Program.RNG.Next(0, moves.Count);
+                    Move move = moves[moveSelected];
+
+                    ConductTurn(move);
+                }
+                else
+                {
+                    FinishTurn();
+                }
+            }
+            else
+            {
+                FinishTurn();
+            }
         }
 
         public void GetUnits()
         {
             for (int i = 0; i < CurrPlayer.ArmyUnits.Count; i++)
             {
-                AddPossibleAttacks(CurrPlayer.ArmyUnits[i].Xcoord, CurrPlayer.ArmyUnits[i].Ycoord);
+                AddPossibleAttacks(CurrPlayer.ArmyUnits[i].UnitCoords);
             }
 
             if (Attacks.Count < 1)
             {
                 for (int i = 0; i < CurrPlayer.ArmyUnits.Count; i++)
                 {
-                    AddPossibleMoves(CurrPlayer.ArmyUnits[i].Xcoord, CurrPlayer.ArmyUnits[i].Ycoord);
+                    AddPossibleMoves(CurrPlayer.ArmyUnits[i].UnitCoords);
                 }
             }
         }
@@ -122,35 +173,37 @@ namespace DraughtsCmd
             return cellMoves;
         }
 
-        public void AddPossibleAttacks(int x, int y)
+        public void AddPossibleAttacks(Coord coords)
         {
-            if (Board.Cells[x, y].Occupant is Man)
+            if (Board.Cells[coords.X, coords.Y].Occupant is Man)
             {
-                AddAttacksMan(Board.Cells[x, y].Occupant);
+                AddAttacksMan(Board.Cells[coords.X, coords.Y].Occupant);
             }
             else
             {
-                AddAttacksKing(Board.Cells[x, y].Occupant);
+                AddAttacksKing(Board.Cells[coords.X, coords.Y].Occupant);
             }
         }
 
         public void AddAttacksMan(Unit man)
         {
             int yDir = man.MoveDir;
-            int manX = man.Xcoord;
-            int manY = man.Ycoord;
+            Coord manXY = new Coord(man.UnitCoords.X, man.UnitCoords.Y);
 
-            BoardCell curr = Board.Cells[manX, manY];
+            BoardCell curr = Board.Cells[manXY.X, manXY.Y];
 
-            if (IsCoordsOnBoard(manX + 1, manY + yDir))
+            Coord dir = new Coord(1, yDir);
+            if (IsCoordsOnBoard(manXY + dir))
             {
-                if (Board.Cells[manX + 1, manY + yDir].Occupant != null && Board.Cells[manX + 1, manY + yDir].Occupant.Commander != CurrPlayer)
+                Coord next = manXY + dir;
+                if (Board.Cells[next.X, next.Y].Occupant != null && Board.Cells[next.X, next.Y].Occupant.Commander != CurrPlayer)
                 {
-                    BoardCell defender = Board.Cells[manX + 1, manY + yDir];
+                    BoardCell defender = Board.Cells[next.X, next.Y];
 
-                    if (IsCoordsOnBoard(manX + 2, manY + yDir + yDir) && Board.Cells[manX + 2, manY + yDir + yDir].Occupant == null)
+                    Coord final = next + dir;
+                    if (IsCoordsOnBoard(final) && Board.Cells[final.X, final.Y].Occupant == null)
                     {
-                        BoardCell finish = Board.Cells[manX + 2, manY + yDir + yDir];
+                        BoardCell finish = Board.Cells[final.X, final.Y];
                         Attacks.Add(new Attack(curr, finish, defender, CurrPlayer, defender.Occupant.Commander));
 
                         if (!CellsAble.Contains(curr))
@@ -161,15 +214,18 @@ namespace DraughtsCmd
                 }
             }
 
-            if (IsCoordsOnBoard(manX - 1, manY + yDir))
+            dir = new Coord(-1, yDir);
+            if (IsCoordsOnBoard(manXY + dir))
             {
-                if (Board.Cells[manX - 1, manY + yDir].Occupant != null && Board.Cells[manX - 1, manY + yDir].Occupant.Commander != CurrPlayer)
+                Coord next = manXY + dir;
+                if (Board.Cells[next.X, next.Y].Occupant != null && Board.Cells[next.X, next.Y].Occupant.Commander != CurrPlayer)
                 {
-                    BoardCell defender = Board.Cells[manX - 1, manY + yDir];
+                    BoardCell defender = Board.Cells[next.X, next.Y];
 
-                    if (IsCoordsOnBoard(manX - 2, manY + yDir + yDir) && Board.Cells[manX - 2, manY + yDir + yDir].Occupant == null)
+                    Coord final = next + dir;
+                    if (IsCoordsOnBoard(final) && Board.Cells[final.X, final.Y].Occupant == null)
                     {
-                        BoardCell finish = Board.Cells[manX - 2, manY + yDir + yDir];
+                        BoardCell finish = Board.Cells[final.X, final.Y];
                         Attacks.Add(new Attack(curr, finish, defender, CurrPlayer, defender.Occupant.Commander));
 
                         if (!CellsAble.Contains(curr))
@@ -181,102 +237,39 @@ namespace DraughtsCmd
             }
         }
 
-        //public void AddAttacksKing(Unit king)
-        //{
-        //    int yDir = king.MoveDir;
-        //    int kX = king.Xcoord;
-        //    int kY = king.Ycoord;
-
-        //    BoardCell curr = Board.Cells[kX, kY];
-
-        //    int[] currCoords = new int[2];
-        //    currCoords[0] = kX;
-        //    currCoords[1] = kY;
-
-        //    int[][] dirs = new int[4][];
-
-        //    dirs[0] = new int[2] { 1, yDir };
-        //    dirs[1] = new int[2] { -1, yDir };
-        //    dirs[2] = new int[2] { 1, -yDir };
-        //    dirs[3] = new int[2] { -1, -yDir };
-
-        //    int i = 0;
-
-        //    while(IsCoordsOnBoard(currCoords[0], currCoords[1]) && i < dirs.Length)
-        //    {
-        //        currCoords[0] += dirs[i][0];
-        //        currCoords[1] += dirs[i][1];
-
-        //        if (IsCoordsOnBoard(currCoords[0], currCoords[1]))
-        //        {
-        //            if (Board.Cells[currCoords[0], currCoords[1]].Occupant != null && Board.Cells[currCoords[0], currCoords[1]].Occupant.Commander != CurrPlayer)
-        //            {
-        //                BoardCell defender = Board.Cells[currCoords[0], currCoords[1]];
-
-        //                if (IsCoordsOnBoard(currCoords[0] + dirs[i][0], currCoords[1] + dirs[i][1]))
-        //                {
-        //                    BoardCell finish = Board.Cells[currCoords[0] + dirs[i][0], currCoords[1] + dirs[i][1]];
-
-        //                    Attacks.Add(new Attack(curr, finish, defender, CurrPlayer, defender.Occupant.Commander));
-
-        //                    if (!CellsAble.Contains(curr))
-        //                    {
-        //                        CellsAble.Add(curr);
-        //                    }
-
-        //                    i++;
-
-        //                    currCoords[0] = kX;
-        //                    currCoords[1] = kY;
-        //                }
-        //            }
-        //        }
-
-        //        if (!IsCoordsOnBoard(currCoords[0] + dirs[i][0], currCoords[1] + dirs[i][1]))
-        //        {
-        //            i++;
-
-        //            currCoords[0] = kX;
-        //            currCoords[1] = kY;
-        //        }
-        //    }
-        //}
-
         public void AddAttacksKing(Unit king)
         {
             int yDir = king.MoveDir;
-            int kX = king.Xcoord;
-            int kY = king.Ycoord;
 
-            BoardCell curr = Board.Cells[kX, kY];
+            Coord kCoord = new Coord(king.UnitCoords.X, king.UnitCoords.Y);
 
-            int[] currCoords = new int[2];
-            currCoords[0] = kX;
-            currCoords[1] = kY;
+            BoardCell curr = Board.Cells[kCoord.X, kCoord.Y];
 
-            int[][] dirs = new int[4][];
+            Coord currCoords = kCoord;
 
-            dirs[0] = new int[2] { 1, yDir };
-            dirs[1] = new int[2] { -1, yDir };
-            dirs[2] = new int[2] { 1, -yDir };
-            dirs[3] = new int[2] { -1, -yDir };
+            Coord[] dirs = new Coord[4];
+
+            dirs[0] = new Coord(1, yDir);
+            dirs[1] = new Coord(-1, yDir);
+            dirs[2] = new Coord(1, -yDir);
+            dirs[3] = new Coord(-1, -yDir);
 
             for (int i = 0; i < dirs.Length; i++)
             {
-                int cX = currCoords[0] + dirs[i][0];
-                int cY = currCoords[1] + dirs[i][1];
+                Coord cXY = currCoords + dirs[i];
 
-                if (IsCoordsOnBoard(cX, cY))
+                if (IsCoordsOnBoard(cXY))
                 {
-                    if (Board.Cells[cX, cY].Occupant != null && Board.Cells[cX, cY].Occupant.Commander != CurrPlayer)
+                    if (Board.Cells[cXY.X, cXY.Y].Occupant != null && Board.Cells[cXY.X, cXY.Y].Occupant.Commander != CurrPlayer)
                     {
-                        BoardCell defender = Board.Cells[cX, cY];
+                        BoardCell defender = Board.Cells[cXY.X, cXY.Y];
 
-                        if (IsCoordsOnBoard(cX + dirs[i][0], cY + dirs[i][1]))
+                        if (IsCoordsOnBoard(cXY + dirs[i]))
                         {
-                            if (Board.Cells[cX + dirs[i][0], cY + dirs[i][1]].Occupant == null)
+                            Coord final = cXY + dirs[i];
+                            if (Board.Cells[final.X, final.Y].Occupant == null)
                             {
-                                BoardCell finish = Board.Cells[cX + dirs[i][0], cY + dirs[i][1]];
+                                BoardCell finish = Board.Cells[final.X, final.Y];
 
                                 Attacks.Add(new Attack(curr, finish, defender, CurrPlayer, defender.Occupant.Commander));
 
@@ -289,74 +282,33 @@ namespace DraughtsCmd
                     }
                 }
             }
-
-            //int i = 0;
-
-            //while (IsCoordsOnBoard(currCoords[0], currCoords[1]) && i < dirs.Length)
-            //{
-            //    currCoords[0] += dirs[i][0];
-            //    currCoords[1] += dirs[i][1];
-
-            //    if (IsCoordsOnBoard(currCoords[0], currCoords[1]))
-            //    {
-            //        if (Board.Cells[currCoords[0], currCoords[1]].Occupant != null && Board.Cells[currCoords[0], currCoords[1]].Occupant.Commander != CurrPlayer)
-            //        {
-            //            BoardCell defender = Board.Cells[currCoords[0], currCoords[1]];
-
-            //            if (IsCoordsOnBoard(currCoords[0] + dirs[i][0], currCoords[1] + dirs[i][1]))
-            //            {
-            //                BoardCell finish = Board.Cells[currCoords[0] + dirs[i][0], currCoords[1] + dirs[i][1]];
-
-            //                Attacks.Add(new Attack(curr, finish, defender, CurrPlayer, defender.Occupant.Commander));
-
-            //                if (!CellsAble.Contains(curr))
-            //                {
-            //                    CellsAble.Add(curr);
-            //                }
-
-            //                i++;
-
-            //                currCoords[0] = kX;
-            //                currCoords[1] = kY;
-            //            }
-            //        }
-            //    }
-
-            //    if (!IsCoordsOnBoard(currCoords[0] + dirs[i][0], currCoords[1] + dirs[i][1]))
-            //    {
-            //        i++;
-
-            //        currCoords[0] = kX;
-            //        currCoords[1] = kY;
-            //    }
-            //}
         }
 
-        public void AddPossibleMoves(int x, int y)
+        public void AddPossibleMoves(Coord coords)
         {
-            if (Board.Cells[x, y].Occupant is Man)
+            if (Board.Cells[coords.X, coords.Y].Occupant is Man)
             {
-                AddMovesMan(Board.Cells[x, y].Occupant);
+                AddMovesMan(Board.Cells[coords.X, coords.Y].Occupant);
             }
             else
             {
-                AddMovesKing(Board.Cells[x, y].Occupant);
+                AddMovesKing(Board.Cells[coords.X, coords.Y].Occupant);
             }
         }
 
         public void AddMovesMan(Unit man)
         {
             int yDir = man.MoveDir;
-            int manX = man.Xcoord;
-            int manY = man.Ycoord;
+            Coord manXY = new Coord(man.UnitCoords.X, man.UnitCoords.Y);
 
-            BoardCell curr = Board.Cells[manX, manY];
+            BoardCell curr = Board.Cells[manXY.X, manXY.Y];
 
-            if (IsCoordsOnBoard(manX + 1, manY + yDir))
+            if (IsCoordsOnBoard(manXY + new Coord(1, yDir)))
             {
-                if (Board.Cells[manX + 1, manY + yDir].Occupant == null)
+                Coord next = manXY + new Coord(1, yDir);
+                if (Board.Cells[next.X, next.Y].Occupant == null)
                 {
-                    BoardCell finish = Board.Cells[manX + 1, manY + yDir];
+                    BoardCell finish = Board.Cells[next.X, next.Y];
                     int opponentIdx = (Turn + 1) % 2;
                     Player opponent = GetPlayer(opponentIdx);
                     Moves.Add(new Move(curr, finish, CurrPlayer, opponent));
@@ -368,12 +320,12 @@ namespace DraughtsCmd
                 }
             }
 
-            if (IsCoordsOnBoard(manX - 1, manY + yDir))
+            if (IsCoordsOnBoard(manXY + new Coord(-1, yDir)))
             {
-                if (Board.Cells[manX - 1, manY + yDir].Occupant == null)
+                Coord next = manXY + new Coord(-1, yDir);
+                if (Board.Cells[next.X, next.Y].Occupant == null)
                 {
-                    BoardCell finish = Board.Cells[manX - 1, manY + yDir];
-
+                    BoardCell finish = Board.Cells[next.X, next.Y];
                     int opponentIdx = (Turn + 1) % 2;
                     Player opponent = GetPlayer(opponentIdx);
                     Moves.Add(new Move(curr, finish, CurrPlayer, opponent));
@@ -386,88 +338,31 @@ namespace DraughtsCmd
             }
         }
 
-        //public void AddMovesKing(Unit king)
-        //{
-        //    int yDir = king.MoveDir;
-        //    int kX = king.Xcoord;
-        //    int kY = king.Ycoord;
-
-        //    BoardCell curr = Board.Cells[kX, kY];
-
-        //    int[] currCoords = new int[2];
-        //    currCoords[0] = kX;
-        //    currCoords[1] = kY;
-
-        //    int[][] dirs = new int[4][];
-
-        //    dirs[0] = new int[2] { 1, yDir };
-        //    dirs[1] = new int[2] { -1, yDir };
-        //    dirs[2] = new int[2] { 1, -yDir };
-        //    dirs[3] = new int[2] { -1, -yDir };
-
-        //    int i = 0;
-
-        //    List<Move> moves = new List<Move>();
-
-        //    while (IsCoordsOnBoard(currCoords[0], currCoords[1]) && i < dirs.Length)
-        //    {
-        //        currCoords[0] += dirs[i][0];
-        //        currCoords[1] += dirs[i][1];
-
-        //        if (IsCoordsOnBoard(currCoords[0], currCoords[1]) && Board.Cells[currCoords[0], currCoords[1]].Occupant == null)
-        //        {
-        //            BoardCell finish = Board.Cells[currCoords[0], currCoords[1]];
-        //            moves.Add(new Move(curr, finish, CurrPlayer, null));
-
-        //            if (!CellsAble.Contains(curr))
-        //            {
-        //                CellsAble.Add(curr);
-        //            }
-
-        //            if (!IsCoordsOnBoard(currCoords[0] + dirs[i][0], currCoords[1] + dirs[i][1]))
-        //            {
-        //                i++;
-
-        //                currCoords[0] = kX;
-        //                currCoords[1] = kY;
-
-        //                Moves.Add(new KingMove(curr, finish, CurrPlayer, null, moves));
-
-        //                moves = new List<Move>();
-        //            }
-        //        }
-        //    }
-        //}
-
         public void AddMovesKing(Unit king)
         {
             int yDir = king.MoveDir;
-            int kX = king.Xcoord;
-            int kY = king.Ycoord;
+            Coord kCoord = new Coord(king.UnitCoords.X, king.UnitCoords.Y);
 
-            BoardCell curr = Board.Cells[kX, kY];
+            BoardCell curr = Board.Cells[kCoord.X, kCoord.Y];
 
-            int[] currCoords = new int[2];
-            currCoords[0] = kX;
-            currCoords[1] = kY;
+            Coord currCoords = kCoord;
 
-            int[][] dirs = new int[4][];
+            Coord[] dirs = new Coord[4];
 
-            dirs[0] = new int[2] { 1, yDir };
-            dirs[1] = new int[2] { -1, yDir };
-            dirs[2] = new int[2] { 1, -yDir };
-            dirs[3] = new int[2] { -1, -yDir };
+            dirs[0] = new Coord(1, yDir);
+            dirs[1] = new Coord(-1, yDir);
+            dirs[2] = new Coord(1, -yDir);
+            dirs[3] = new Coord(-1, -yDir);
 
             for (int i = 0; i < dirs.Length; i++)
             {
-                int cX = currCoords[0] + dirs[i][0];
-                int cY = currCoords[1] + dirs[i][1];
+                Coord cXY = currCoords + dirs[i];
 
-                if (IsCoordsOnBoard(cX, cY))
+                if (IsCoordsOnBoard(cXY))
                 {
-                    if (Board.Cells[cX, cY].Occupant == null)
+                    if (Board.Cells[cXY.X, cXY.Y].Occupant == null)
                     {
-                        BoardCell finish = Board.Cells[cX, cY];
+                        BoardCell finish = Board.Cells[cXY.X, cXY.Y];
 
                         int opponentIdx = (Turn + 1) % 2;
                         Player opponent = GetPlayer(opponentIdx);
@@ -482,11 +377,194 @@ namespace DraughtsCmd
             }
         }
 
-        public bool IsCoordsOnBoard(int x, int y)
+        public bool IsCoordsOnBoard(Coord coords)
         {
-            return (0 <= x && x < Board.Cells.GetLength(0)) && (0 <= y && y < Board.Cells.GetLength(1));
+            return (0 <= coords.X && coords.X < Board.Cells.GetLength(0)) && (0 <= coords.Y && coords.Y < Board.Cells.GetLength(1));
         }
 
+        public void AddCurrentMoment()
+        {
+            HistoryItem item = new HistoryItem();
 
+            Player p1 = GetPlayer(0);
+            Player p2 = GetPlayer(1);
+            for (int i = 0; i < p1.ArmyUnits.Count; i++)
+            {
+                if (p1.ArmyUnits[i] is Man)
+                {
+                    item.AddUnit(0, p1.ArmyUnits[i].UnitCoords, 0, p1.Kills, Turn);
+                }
+                else
+                {
+                    item.AddUnit(0, p1.ArmyUnits[i].UnitCoords, 1, p1.Kills, Turn);
+                }
+            }
+
+            for (int i = 0; i < p2.ArmyUnits.Count; i++)
+            {
+                if (p2.ArmyUnits[i] is Man)
+                {
+                    item.AddUnit(1, p2.ArmyUnits[i].UnitCoords, 0, p1.Kills, Turn);
+                }
+                else
+                {
+                    item.AddUnit(1, p2.ArmyUnits[i].UnitCoords, 1, p1.Kills, Turn);
+                }
+            }
+
+            m_history.AddItem(item);
+        }
+
+        public void Undo()
+        {
+            Player p1 = Players[0];
+            Player p2 = Players[1];
+            for (int i = 0; i < p1.ArmyUnits.Count; i++)
+            {
+                Unit unit = p1.ArmyUnits[i];
+                BoardCell cell = Board.Cells[unit.UnitCoords.X, unit.UnitCoords.Y];
+
+                cell.EmptyCell();
+            }
+
+            for (int i = 0; i < p2.ArmyUnits.Count; i++)
+            {
+                Unit unit = p2.ArmyUnits[i];
+                BoardCell cell = Board.Cells[unit.UnitCoords.X, unit.UnitCoords.Y];
+
+                cell.EmptyCell();
+            }
+
+            p1.ArmyUnits = new List<Unit>();
+            p1.Kills = 0;
+
+            p2.ArmyUnits = new List<Unit>();
+            p2.Kills = 0;
+
+            m_history.Undo();
+
+            HistoryItem item = m_history.CurrItem;
+
+            p1.Kills = item.P1Kills;
+            p2.Kills = item.P2Kills;
+            for (int i = 0; i < item.P1UnitCoords.Count; i++)
+            {
+                BoardCell cell = Board.Cells[item.P1UnitCoords[i].X, item.P1UnitCoords[i].Y];
+                switch (item.P1UnitTypes[i])
+                {
+                    case 0:
+                        Man man = new Man(item.P1UnitCoords[i].X, item.P1UnitCoords[i].Y, p1);
+                        man.MoveDir = -1;
+
+                        cell.FillCell(man);
+                        break;
+                    case 1:
+                        King king = new King(item.P1UnitCoords[i].X, item.P1UnitCoords[i].Y, p1);
+                        king.MoveDir = -1;
+
+                        cell.FillCell(king);
+                        break;
+                }
+            }
+
+            for (int i = 0; i < item.P2UnitCoords.Count; i++)
+            {
+                BoardCell cell = Board.Cells[item.P2UnitCoords[i].X, item.P2UnitCoords[i].Y];
+                switch (item.P2UnitTypes[i])
+                {
+                    case 0:
+                        Man man = new Man(item.P2UnitCoords[i].X, item.P2UnitCoords[i].Y, p2);
+                        man.MoveDir = 1;
+
+                        cell.FillCell(man);
+                        break;
+                    case 1:
+                        King king = new King(item.P2UnitCoords[i].X, item.P2UnitCoords[i].Y, p2);
+                        king.MoveDir = 1;
+
+                        cell.FillCell(king);
+                        break;
+                }
+            }
+
+            Turn = item.Turn;
+            CurrPlayer = Players[Turn % 2];
+        }
+
+        public void Redo()
+        {
+            Player p1 = Players[0];
+            Player p2 = Players[1];
+            for (int i = 0; i < p1.ArmyUnits.Count; i++)
+            {
+                Unit unit = p1.ArmyUnits[i];
+                BoardCell cell = Board.Cells[unit.UnitCoords.X, unit.UnitCoords.Y];
+
+                cell.EmptyCell();
+            }
+
+            for (int i = 0; i < p2.ArmyUnits.Count; i++)
+            {
+                Unit unit = p2.ArmyUnits[i];
+                BoardCell cell = Board.Cells[unit.UnitCoords.X, unit.UnitCoords.Y];
+
+                cell.EmptyCell();
+            }
+
+            p1.ArmyUnits = new List<Unit>();
+            p1.Kills = 0;
+
+            p2.ArmyUnits = new List<Unit>();
+            p2.Kills = 0;
+
+            m_history.Redo();
+
+            HistoryItem item = m_history.CurrItem;
+
+            p1.Kills = item.P1Kills;
+            p2.Kills = item.P2Kills;
+            for (int i = 0; i < item.P1UnitCoords.Count; i++)
+            {
+                BoardCell cell = Board.Cells[item.P1UnitCoords[i].X, item.P1UnitCoords[i].Y];
+                switch (item.P1UnitTypes[i])
+                {
+                    case 0:
+                        Man man = new Man(item.P1UnitCoords[i].X, item.P1UnitCoords[i].Y, p1);
+                        man.MoveDir = -1;
+
+                        cell.FillCell(man);
+                        break;
+                    case 1:
+                        King king = new King(item.P1UnitCoords[i].X, item.P1UnitCoords[i].Y, p1);
+                        king.MoveDir = -1;
+
+                        cell.FillCell(king);
+                        break;
+                }
+            }
+
+            for (int i = 0; i < item.P2UnitCoords.Count; i++)
+            {
+                BoardCell cell = Board.Cells[item.P2UnitCoords[i].X, item.P2UnitCoords[i].Y];
+                switch (item.P2UnitTypes[i])
+                {
+                    case 0:
+                        Man man = new Man(item.P2UnitCoords[i].X, item.P2UnitCoords[i].Y, p2);
+                        man.MoveDir = 1;
+
+                        cell.FillCell(man);
+                        break;
+                    case 1:
+                        King king = new King(item.P2UnitCoords[i].X, item.P2UnitCoords[i].Y, p2);
+                        king.MoveDir = 1;
+
+                        cell.FillCell(king);
+                        break;
+                }
+            }
+
+            Turn = item.Turn;
+            CurrPlayer = Players[Turn % 2];
+        }
     }
 }
