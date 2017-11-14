@@ -40,6 +40,7 @@ namespace DraughtsCmd
             }
         }
 
+        // Discard redo stack if item is added to move history
         public void AddItem(HistoryItem newItem)
         {
             Future = new Stack<HistoryItem>();

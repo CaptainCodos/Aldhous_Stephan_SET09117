@@ -96,11 +96,6 @@ namespace DraughtsCmd
             }
         }
 
-        public List<Move> GetAttacks()
-        {
-            return null;
-        }
-
         public List<Move> GetMovesOfCell(BoardCell cell)
         {
             List<Move> cellMoves = new List<Move>();
@@ -491,5 +486,7 @@ namespace DraughtsCmd
         {
             return (0 <= x && x < Board.Cells.GetLength(0)) && (0 <= y && y < Board.Cells.GetLength(1));
         }
+
+
     }
 }
