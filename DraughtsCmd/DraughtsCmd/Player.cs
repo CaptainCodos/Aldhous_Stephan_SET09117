@@ -15,10 +15,14 @@ namespace DraughtsCmd
 
         public string BoardSign { get; set; }
 
-        public Player(string sign)
+        public bool IsAIPlayer { get; set; }
+
+        public Player(string sign, bool isAI)
         {
             ArmyUnits = new List<Unit>();
             BoardSign = sign;
+            
+            IsAIPlayer = isAI;
         }
     }
 }

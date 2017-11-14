@@ -10,6 +10,7 @@ namespace DraughtsCmd
     {
         public static List<Game> games;
         public static Game lastGame;
+        public static readonly Random RNG = new Random();
 
         static void Main(string[] args)
         {

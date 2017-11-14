@@ -73,15 +73,33 @@ namespace DraughtsCmd
             {
                 case "ng":
                     Confirm(out confirmVal);
-
+                    
                     if (confirmVal == 1)
                     {
-                        Game game = new Game();
-                        Program.lastGame = game;
+                        Console.WriteLine("\nFight against AI? y/n");
 
+                        Game game;
                         AppState state = this;
-                        state = new StartPlay(game, 1);
-                        state.UpdateState();
+                        switch (Input.GetLine())
+                        {
+                            case "y":
+                                game = new Game(true);
+                                Program.lastGame = game;
+                                
+                                state = new StartPlay(game, 1);
+                                state.UpdateState();
+                                break;
+                            case "n":
+                                game = new Game(false);
+                                Program.lastGame = game;
+                                
+                                state = new StartPlay(game, 1);
+                                state.UpdateState();
+                                break;
+                            default:
+                                UpdateState();
+                                break;
+                        }
                     }
                     else
                     {
@@ -159,6 +177,8 @@ namespace DraughtsCmd
             {
                 m_game = game;
                 Program.games.Add(game);
+
+                m_game.GetManager().AddCurrentMoment();
             }
 
             AppState state = this;
@@ -200,6 +220,14 @@ namespace DraughtsCmd
                     {
                         UpdateState();
                     }
+                    break;
+                case "u":
+                    m_game.GetManager().Undo();
+                    UpdateState();
+                    break;
+                case "r":
+                    m_game.GetManager().Redo();
+                    UpdateState();
                     break;
                 default:
                     UpdateState();
@@ -272,7 +300,7 @@ namespace DraughtsCmd
 
                         int y = m_game.GetManager().Board.ConvertYAxisToInt(input[2]);
 
-                        if (m_game.GetManager().IsCoordsOnBoard(x, y) && m_game.GetManager().CellsAble.Contains(m_game.GetManager().Board.Cells[x, y]))
+                        if (m_game.GetManager().IsCoordsOnBoard(new Coord(x, y)) && m_game.GetManager().CellsAble.Contains(m_game.GetManager().Board.Cells[x, y]))
                         {
                             List<Move> moves = m_game.GetManager().GetMovesOfCell(m_game.GetManager().Board.Cells[x, y]);
 
@@ -397,12 +425,16 @@ namespace DraughtsCmd
                             {
                                 moves = m_game.GetManager().GetMovesOfCell(m_game.GetManager().CellsAble[0]);
 
+                                m_game.GetManager().AddCurrentMoment();
+
                                 state = new SelectMove(m_game, moves);
                                 state.UpdateState();
                             }
                             else
                             {
                                 m_game.GetManager().FinishTurn();
+
+                                m_game.GetManager().AddCurrentMoment();
 
                                 m_game.CheckIfComplete();
 

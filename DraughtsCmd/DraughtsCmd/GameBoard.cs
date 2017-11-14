@@ -47,7 +47,7 @@ namespace DraughtsCmd
                     {
                         val += 1;
 
-                        if (val % 2 == 0 && val == 8)
+                        if (val % 2 == 0)
                         {
                             Man man = new Man(x, y, m_manager.GetPlayer(0));
                             man.MoveDir = -1;
@@ -80,7 +80,7 @@ namespace DraughtsCmd
                 {
                     val += 1;
 
-                    if (val % 2 == 0 && val == 2)
+                    if (val % 2 == 0)
                     {
                         Man man = new Man(x, y, m_manager.GetPlayer(1));
                         man.MoveDir = 1;

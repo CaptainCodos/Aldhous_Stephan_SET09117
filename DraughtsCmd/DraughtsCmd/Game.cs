@@ -15,9 +15,9 @@ namespace DraughtsCmd
         public bool GameEnded { get; set; }
         public int Winner { get; set; }
 
-        public Game()
+        public Game(bool hasAI)
         {
-            m_manager = new GameManager(this);
+            m_manager = new GameManager(this, hasAI);
             TurnsSkipped = 0;
         }
 
