@@ -32,9 +32,10 @@ namespace DraughtsCmd
             m_endCell.OccupyCell(m_startCell, m_startCell.Occupant);
             m_endCell.Occupant.UpdateXY(m_endCell.XCoord, m_endCell.YCoord);
 
-            if (m_endCell.KingsLane)
+            if (m_endCell.KingsLane && m_endCell.Occupant is Man)
             {
                 m_endCell.Occupant.ConvertToKing(m_endCell);
+                m_endCell.Occupant.Converted = true;
             }
         }
     }

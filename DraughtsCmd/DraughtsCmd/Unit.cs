@@ -17,6 +17,9 @@ namespace DraughtsCmd
         // Direction the unit moves (matters little as king)
         public int MoveDir { get; set; }
 
+        // Flag to check if the unit just got converted to a king
+        public bool Converted { get; set; }
+
         public Unit(int x, int y, Player commander)
         {
             Commander = commander;
@@ -24,6 +27,8 @@ namespace DraughtsCmd
             Commander.ArmyUnits.Add(this);
 
             UnitCoords = new Coord(x, y);
+
+            Converted = false;
         }
         
         public Unit CopyData()

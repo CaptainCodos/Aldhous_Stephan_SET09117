@@ -174,14 +174,14 @@ namespace DraughtsCmd
                                 if (moves[k] is Move)
                                 {
                                     if (Cells[x, y] == moves[k].GetEndCell)
-                                        tmpS[1] = " " + k;
+                                        tmpS[1] = " " + (k + 1);
                                 }
                                 else
                                 {
                                     Attack aMove = (Attack)moves[k];
 
                                     if (Cells[x, y] == aMove.GetDefenderCell)
-                                        tmpS[1] = " " + k;
+                                        tmpS[1] = " " + (k + 1);
                                 }
                             }
 
