@@ -282,6 +282,9 @@ namespace DraughtsCmd
         }
     }
 
+    /// <summary>
+    /// If player chooses to play the turn then they must select a possible piece to move
+    /// </summary>
     class SelectPiece : AppState
     {
         private Game m_game;
@@ -403,6 +406,9 @@ namespace DraughtsCmd
         }
     }
 
+    /// <summary>
+    /// The player must then select a move available to the piece they selected
+    /// </summary>
     class SelectMove : AppState
     {
         private Game m_game;
@@ -450,6 +456,7 @@ namespace DraughtsCmd
                     // check if input can be parsed and if the input is within the range of moves
                     if (int.TryParse(input, out select))
                     {
+                        select--;
                         if (0 <= select && select < m_moves.Count)
                         {
                             // conducts the move selected (this method also checks for possible attack if the move was an attack
