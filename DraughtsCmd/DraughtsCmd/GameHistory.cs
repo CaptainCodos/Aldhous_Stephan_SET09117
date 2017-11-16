@@ -20,26 +20,57 @@ namespace DraughtsCmd
 
         public void Undo()
         {
-            // check if can revert
-            if (Past.Count > 2)
+            int currTurn = CurrItem.Turn;
+            int targetTurn = currTurn - 2;
+
+            while (Past.Count > 0 && currTurn != targetTurn)
             {
                 Future.Push(Past.Pop());
-                Future.Push(Past.Pop());
 
-                CurrItem = Past.Peek();
+                if (Past.Count <= 0)
+                {
+                    currTurn = 1;
+                }
+                else
+                {
+                    CurrItem = Past.Peek();
+                    currTurn = CurrItem.Turn;
+                }
+                
+                
             }
+
+            // check if can revert
+            //if (Past.Count > 2)
+            //{
+            //    Future.Push(Past.Pop());
+            //    Future.Push(Past.Pop());
+
+            //    CurrItem = Past.Peek();
+            //}
         }
 
         public void Redo()
         {
-            // check if can redo
-            if (Future.Count > 1)
+            int currTurn = CurrItem.Turn;
+            int targetTurn = currTurn + 2;
+
+            while (Future.Count > 0 && currTurn != targetTurn)
             {
-                Past.Push(Future.Pop());
                 Past.Push(Future.Pop());
 
                 CurrItem = Past.Peek();
+                currTurn = CurrItem.Turn;
             }
+
+            // check if can redo
+            //if (Future.Count > 1)
+            //{
+            //    Past.Push(Future.Pop());
+            //    Past.Push(Future.Pop());
+
+            //    CurrItem = Past.Peek();
+            //}
         }
 
         // Discard redo stack if item is added to move history

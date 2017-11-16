@@ -479,8 +479,6 @@ namespace DraughtsCmd
                             {
                                 m_game.GetManager().FinishTurn();
 
-                                m_game.GetManager().AddCurrentMoment();
-
                                 m_game.CheckIfComplete();
 
                                 state = new StartPlay(m_game, 0);

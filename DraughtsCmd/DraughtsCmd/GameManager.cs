@@ -67,7 +67,7 @@ namespace DraughtsCmd
             CellsAble = new List<BoardCell>();
 
             // if move is attack, check for further moves (only if piece did not just turn into a king)
-            if (move is Attack && !move.GetEndCell.Occupant.Converted)
+            if (move is Attack && !curr.Occupant.Converted)
             {
                 AddPossibleAttacks(new Coord(curr.XCoord, curr.YCoord));
 
@@ -76,8 +76,10 @@ namespace DraughtsCmd
                     AITurn();
                 }
             }
-
-            move.GetEndCell.Occupant.Converted = false;
+            else
+            {
+                curr.Occupant.Converted = false;
+            }
 
             // if no cells available or move was normal and is AI player then finish
             if (CurrPlayer.IsAIPlayer && CellsAble.Count <= 0)
@@ -116,6 +118,10 @@ namespace DraughtsCmd
 
                 // conduct AI turn
                 AITurn();
+            }
+            else
+            {
+                AddCurrentMoment();
             }
         }
 
