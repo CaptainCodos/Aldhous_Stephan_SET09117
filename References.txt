@@ -1,3 +1,5 @@
 Source - Date Accesses/Published Date
 
 https://arcanecode.com/2007/09/07/adding-wpf-controls-progrrammatically/ - 29/09/2017 - published[07/09/2017] (dynamically add buttons)
+http://checkers.wikia.com/wiki/Rules_of_Checkers - 09/11/2017
+https://en.wikipedia.org/wiki/Draughts - 09/11/2017
